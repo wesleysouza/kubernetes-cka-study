@@ -1,9 +1,13 @@
 # Primeiros Passos
 
+## Comandos básicos
+
+Exibindo os nós:
 ~~~shell
 kubctl get nodes
 ~~~
 
+Descrevendo recursos:
 ~~~shell
 kubctl describe <resource>
 ~~~
@@ -14,21 +18,22 @@ Exemplo:
 kubctl describe nodes nome_do_no
 ~~~
 
-Taints -> Restrições para os nós
+Obs.: Taints são restrições para os nós
 
+Verificando Pods dentro de um namespace:
 ~~~shell
 kubectl get pods -n kube-system
 ~~~
 
--n é o namespace
+Obs.: -n é o namespace
 
-Comando para adicionar novos nodes:
+Comando para exibir a instrução para adicionar novos nós:
 
 ~~~shell
 kubadm token create --print-join-command
 ~~~
 
-Describe nos pods
+Aplicando o comando **describe** nos Pods
 
 ~~~shell
 kubctl describe pods -n kube-system
@@ -40,13 +45,13 @@ Ver os Pods em todos os namespaces:
 kubectl get pods --all-namespaces
 ~~~
 
-Ver os namespaces criados
+Ver todos os namespaces:
 
 ~~~shell
 kubectl get namespaces
 ~~~
 
-Criando namespaces
+Criando namespaces:
 
 ~~~shell
 kubectl create namespace nome_do_namespace
@@ -54,11 +59,12 @@ kubectl create namespace nome_do_namespace
 
 ## Criando o primeiro Pod
 
+Criando primeiro Pod com a imagem do nginx:
 ~~~shell
 kubectl run nginx --image=nginx
 ~~~
 
-Vendo os Pods:
+Verificando os Pods em execução:
 
 ~~~shell
 kubectl get pods
@@ -70,7 +76,7 @@ Vendo os detalhes do Pod criado:
 kubectl describe pods nginx
 ~~~
 
-Vendo o YAML utlizando (gerado) na criação do Pod:
+Obtendo o template YAML utlizando (gerado) na criação do Pod:
 
 ~~~shell
 kubectl get pods nginx -o yaml
@@ -84,7 +90,7 @@ Redirecione o conteúdo do YAML do Pod para um arquivo novo YAML:
 kubectl get pods nginx -o yaml > meu_primeiro_pod.yaml
 ~~~
 
-Simplificando o arquivo...
+Analisando o templeta é possível observar que ele é bem grande, porém, para o Pod que vamos executar agora ele possuí muita informação desnecessária. Desse modo, podemos simplificar o arquivo e deixar como está apresentado abaixo:
 
 ~~~yaml
 apiVersion: v1
@@ -105,7 +111,7 @@ spec:
 
 ### Criando e deletando o Pod por meio do template YAML:
 
-Criando o Pod:
+Para criar um Pod através de um template YAML execte o comando:
 
 ~~~shell
 kubectl create -f meu_primeiro_pod.yaml
