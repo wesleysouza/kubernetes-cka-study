@@ -1,25 +1,14 @@
-# Info Cluster
+# Instalação do Kubernetes no Ubuntu 20.04 LTS
 
-Nós do Cluster
+Essa instalação foi realizada em 3 VMs criadas por meio do VirtualBox. A configuração de cada uma das máquinas é detalhada na tabela abaixo:
 
-## sagan-01
+| host     | user  | ip           | cpus | RAM | configuração de rede |
+|----------|-------|--------------|------|-----|----------------------|
+| sagan-01 | sagan | 192.168.0.23 | 2    | 2   | placa em modo bridge |
+| sagan-02 | sagan | 192.168.0.21 | 2    | 2   | placa em modo bridge |
+| sagan-03 | sagan | 192.168.0.22 | 2    | 2   | placa em modo bridge |
 
-user: sagan
-ip: 192.168.0.23
-
-## sagan-02
-
-user: sagan
-ip: 192.168.0.21
-
-## sagan-03
-
-user: sagan
-ip: 192.168.0.22
-
-# Install Kubernetes
-
-## 1. Criar arquivo /etc/modules-load.d/k8s.conf e adicionar o conteúdo abaixo em todos os nós:
+## Passo 1: Criar arquivo /etc/modules-load.d/k8s.conf e adicionar o conteúdo abaixo em todos os nós:
 
 ```
 br_netfilter
@@ -32,24 +21,20 @@ nf_conntrack_ipv4
 
 O conteúdo desse arquivo descreve os módulos do kernel GNU/Linux necessários para o pleno funcionamento do Kubernetes.
 
-## 2. Faça update e upgrade do sistema em todosos nós:
+## Passo 2: Faça update e upgrade do sistema em todosos nós:
 
 ```shell
 sudo apt update
 sudo apt upgrade -y
 ```
 
-## 3. Instalação e Configuração do Docker nos nós
+## Passo 3: Instale e configure o Docker em todos os nós
 
 ### Instalando o Docker
 
 ```shell
 curl -fsSL https://get.docker.com | bash
 ```
-
-#### Config DNS
-
-8.8.8.8 e 1.1.1.1 no arquivo /etc/resolv.conf
 
 #### Adicione o seu usuário no grupo Docker
 
@@ -100,7 +85,7 @@ docker info | grep -i cgroup
 
 Se a saída foi **Cgroup Driver: systemd**, tudo certo!
 
-## 4. Instalando e configurando o *kubeadm*.
+## Passo 4: Instale e configure o *kubeadm*.
 
 ~~~shell
 sudo apt-get update && sudo apt-get install -y apt-transport-https gnupg2
@@ -124,7 +109,7 @@ sudo swapoff -a
 
 Comente a linha referente ao swap no arquivo /etc/fstab.
 
-## Inicialização do cluster
+## Passo 5: Inicialize o cluster
 
 Faça download das imagens que vão ser utilizadas no nó master:
 
@@ -182,7 +167,7 @@ sudo systemctl daemon-reload
 sudo systemctl restart kubelet
 ~~~
 
-## Instalação do pod network
+## Passo 6: Instale o pod network
 
 Carregue os mósulos do kernel necessários com o comando:
 
@@ -220,4 +205,4 @@ weave-net-fvttp                     2/2     Running   0          8d
 weave-net-xl7km         
 ~~~
 
-Desse modo, é possível observar que há três contêineres do Weave-net em execução provendo a pod network para o nosso cluster.
+Se sua saída for semelhante a apresentada acima, sendo possível observar que há três contêineres do Weave-net em execução (provendo a pod network para o nosso cluster), tudo foi configurado corretamente.
