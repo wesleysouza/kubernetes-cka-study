@@ -150,6 +150,26 @@ kubeadm join 192.168.0.100:6443 --token jfri31.ofryjs5y52dqkqc3 \
         --discovery-token-ca-cert-hash sha256:c7a20a2be5c2adb091f9657166a416aaff60f7b89b9bfc68016c165c129112a1
 ~~~
 
+## ADD workernode
+
+Comando para add:
+
+~~~
+kubeadm join 192.168.0.100:6443 --token jfri31.ofryjs5y52dqkqc3 \
+        --discovery-token-ca-cert-hash sha256:c7a20a2be5c2adb091f9657166a416aaff60f7b89b9bfc68016c165c129112a1
+~~~
+
+Mensagem de sucesso:
+
+~~~
+This node has joined the cluster:
+* Certificate signing request was sent to apiserver and a response was received.
+* The Kubelet was informed of the new secure connection details.
+
+Run 'kubectl get nodes' on the control-plane to see this node join the cluster.
+~~~
+
+
 Caso o servidor possua mais de uma interface de rede, você pode verificar se o IP interno do nó do seu cluster corresponde ao IP da interface esperada com o seguinte comando:
 
 ~~~shell
