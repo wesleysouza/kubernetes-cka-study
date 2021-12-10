@@ -46,7 +46,7 @@ sudo usermod -aG docker $USER
 
 #### Configuração do Docker Deamon
 
-Cole esse comando no shell:
+Reinicie o sistema e cole esse comando no shell:
 
 ```shell
 cat <<EOF | sudo tee /etc/docker/daemon.json
