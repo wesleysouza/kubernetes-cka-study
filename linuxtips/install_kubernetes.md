@@ -146,8 +146,8 @@ Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
 
 Then you can join any number of worker nodes by running the following on each as root:
 
-kubeadm join 192.168.0.23:6443 --token d02jsc.tv1mf71vvz8ebu1j \
-	--discovery-token-ca-cert-hash sha256:64f7db5fc7dd4b929d70e96608f5574f1195168e9aafae6dd093675a874a0d5a 
+kubeadm join 192.168.0.100:6443 --token jfri31.ofryjs5y52dqkqc3 \
+        --discovery-token-ca-cert-hash sha256:c7a20a2be5c2adb091f9657166a416aaff60f7b89b9bfc68016c165c129112a1
 ~~~
 
 Caso o servidor possua mais de uma interface de rede, você pode verificar se o IP interno do nó do seu cluster corresponde ao IP da interface esperada com o seguinte comando:
