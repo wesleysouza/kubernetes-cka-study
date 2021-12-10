@@ -41,7 +41,7 @@ curl -fsSL https://get.docker.com | bash
 #### Adicione o seu usuário no grupo Docker
 
 ```shell
-sudo usermod -aG docker seu_usuario
+sudo usermod -aG docker $USER
 ```
 
 #### Configuração do Docker Deamon
