@@ -1,12 +1,14 @@
-# Instalação do Kubernetes no Ubuntu 20.04 LTS
+# Instalação do Kubernetes no Ubuntu Server 20.04 LTS
 
 Essa instalação foi realizada em 3 VMs criadas por meio do VirtualBox. A configuração de cada uma das máquinas é detalhada na tabela abaixo:
 
-| host     | user  | ip           | cpus | RAM | configuração de rede |
-|----------|-------|--------------|------|-----|----------------------|
-| sagan-01 | sagan | 192.168.0.23 | 2    | 2   | placa em modo bridge |
-| sagan-02 | sagan | 192.168.0.21 | 2    | 2   | placa em modo bridge |
-| sagan-03 | sagan | 192.168.0.22 | 2    | 2   | placa em modo bridge |
+| host        | user | ip            | cpus | RAM | configuração de rede |
+|-------------|------|---------------|------|-----|----------------------|
+| k8s-master  | k8s  | 192.168.0.100 | 2    | 2   | placa em modo bridge |
+| k8s-worker1 | k8s  | 192.168.0.101 | 2    | 2   | placa em modo bridge |
+| k8s-worker2 | s8s  | 192.168.0.102 | 2    | 2   | placa em modo bridge |
+
+A configuração da rede no Ubuntu Server 20.04 deve ser realizada via [netplan](https://netplan.io/examples/).
 
 ## Passo 1: Criar arquivo /etc/modules-load.d/k8s.conf e adicionar o conteúdo abaixo em todos os nós:
 
