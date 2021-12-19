@@ -150,6 +150,8 @@ kubeadm join 192.168.0.100:6443 --token jfri31.ofryjs5y52dqkqc3 \
         --discovery-token-ca-cert-hash sha256:c7a20a2be5c2adb091f9657166a416aaff60f7b89b9bfc68016c165c129112a1
 ~~~
 
+Essas informações descritas acima são muito importantes, leia com atenção e faça os procedimentos indicados.
+
 ## ADD workernode
 
 Comando para add:
@@ -228,3 +230,9 @@ weave-net-xl7km
 ~~~
 
 Se sua saída for semelhante a apresentada acima, sendo possível observar que há três contêineres do Weave-net em execução (provendo a pod network para o nosso cluster), tudo foi configurado corretamente.
+
+# Referências
+
+[Livro Descomplicando o Kubernetes](https://livro.descomplicandokubernetes.com.br/pt/)
+
+[Curso Descomplicando o Kubernetes](https://www.linuxtips.io/products/descomplicando-o-kubernetes)

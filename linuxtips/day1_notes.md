@@ -4,18 +4,18 @@
 
 Exibindo os nós:
 ~~~shell
-kubctl get nodes
+kubectl get nodes
 ~~~
 
 Descrevendo recursos:
 ~~~shell
-kubctl describe <resource>
+kubectl describe <resource>
 ~~~
 
 Exemplo:
 
 ~~~shell
-kubctl describe nodes nome_do_no
+kubectl describe nodes nome_do_no
 ~~~
 
 Obs.: Taints são restrições para os nós
@@ -30,13 +30,13 @@ Obs.: -n é o namespace
 Comando para exibir a instrução para adicionar novos nós:
 
 ~~~shell
-kubadm token create --print-join-command
+kubeadm token create --print-join-command
 ~~~
 
 Aplicando o comando **describe** nos Pods
 
 ~~~shell
-kubctl describe pods -n kube-system
+kubectl describe pods -n kube-system
 ~~~
 
 Ver os Pods em todos os namespaces:
@@ -90,7 +90,7 @@ Redirecione o conteúdo do YAML do Pod para um arquivo novo YAML:
 kubectl get pods nginx -o yaml > meu_primeiro_pod.yaml
 ~~~
 
-Analisando o templeta é possível observar que ele é bem grande, porém, para o Pod que vamos executar agora ele possuí muita informação desnecessária. Desse modo, podemos simplificar o arquivo e deixar como está apresentado abaixo:
+Analisando o templete é possível observar que ele é bem grande, porém, para o Pod que vamos executar agora ele possuí muita informação desnecessária. Desse modo, podemos simplificar o arquivo e deixar como está apresentado abaixo:
 
 ~~~yaml
 apiVersion: v1
@@ -211,7 +211,7 @@ Session Affinity:  None
 Events:            <none>
 ~~~
 
-Vendo os endpoints (quando vc cria um service, tamb[em está criando um endpoint):
+Vendo os endpoints (quando vc cria um service, também está criando um endpoint):
 
 ~~~shell
 kubectl get endpoints
@@ -232,7 +232,12 @@ Editando o service:
 kubectl edit service nginx3
 ~~~
 
-Substitua no arquivo o tipo ClusterIp para NodePort.
+Substitua no arquivo o tipo ClusterIp para NodePort na linha:
+
+~~~
+type: ClusterIP. 
+type: NodePort. 
+~~~
 
 Verifique a porta do serviço com o comando:
 
