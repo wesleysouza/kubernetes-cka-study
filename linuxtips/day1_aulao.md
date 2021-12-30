@@ -67,8 +67,15 @@ Configurando o completion:
 source <(kubectl completion bash)
 ```
 - De forma permanente:
+
 ```
 kubectl completion bash > /etc/bash_completion.d/kubectl
+```
+
+ou
+
+```
+"source <(kubectl completion bash)" >> /root/.bashrc
 ```
 
 Vendo os namespaces:
