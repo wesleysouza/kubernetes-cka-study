@@ -287,3 +287,312 @@ Obs.1: Use o des
 cribe para analisar os objetos deployados.
 
 Obs.2: A saída dos comandos é muito importante na prova de certificação.
+
+### Resumo
+
+Tipos de Service:
+- ClusterIP;
+- NodePort:
+  - Quando um NodePort é criado junto com ele vem um ClusterIP.
+- LoadBalancer:
+  - Quando um LoadBalancer é criado junto com ele vem um ClusterIP e NodePort.
+
+## Limitando Recursos
+
+Sempre que subir uma aplicação vc deve limitar a quantidade de recursos que essa aplicação pode consumir.
+
+Para limitar vamos editar um arquivo de deployment no campo **resources**:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: deploy-limitado
+  name: deploy-limitado
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: deploy-limitado
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: deploy-limitado
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            memory: 512Mi
+            cpu: "500m"
+          requests:
+            memory: 256Mi
+            cpu: "250m"
+status: {}
+```
+
+Diferenças entre limits e requests:
+- Limits: Total reservado;
+- Requsts: Mínimo de recursos garantidos;]
+
+### Criando o "Deploy Limitado"
+
+```
+kubectl create -f deploy-limitado.yaml
+```
+
+Vendo os deployments em execução:
+
+```
+kubectl get deployments
+```
+
+Analisando com o describe:
+
+```
+kubectl describe deployments. deploy-limitado
+```
+
+Obs.: É possível substituir o deployment antigo com o comando **replace**:
+
+```
+kubectl replace -f nome-deployment
+```
+#### Criando o service parao "Deploy limitado"
+
+É possíver editar um serviço "no quente" com o comando abaixo:
+
+```
+kubectl edit service nome-so-serviço
+```
+
+Vai abrir um arquivo pelo vim para editar e quando for salvo o serviço será editado. É possível mudar o número de replicas, tipo do serviço e etc.
+
+Para ver o número de replicas use o comando:
+
+```
+kubectl get replicasets.
+```
+
+Obs.: Modificações incorretas ou modificações não permitidas são ignoradas!
+
+### Brincando com os pods
+
+Vendo os pods e o local onde eles estão:
+
+```
+kubectl get pods -o wide
+```
+
+Executando coisas dentro dos containers através do bash:
+
+```
+kubectl exec -ti nome-container -- bash
+```
+
+Instalando o stress:
+
+```
+apt-get update && apt-get install -y stress
+```
+
+Testante o stress:
+
+```
+stress --vm 1 --vm-bytes 256M
+```
+
+Valores que passam dos limites como 550 vão estourar os limites e matar o processo.
+
+### Trabalhando com namespaces
+
+Verificando os namespaces:
+
+```
+kubectl get namespaces
+```
+
+Criando um namespace:
+```
+kubectl create namespace nome-do-novo-namespace
+```
+
+Verificando namespace:
+```
+kubectl describe namespaces nome-do-namespace
+```
+
+Pegando o arquivo yaml do namespace:
+
+```
+kubectl get namespaces aula02 -o yaml > meu_primeiro_namespace.yaml
+```
+
+Arquivo modificado:
+
+```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: strigus
+spec:
+  finalizers:
+  - kubernetes
+```
+
+Criando o namespace:
+
+```
+kubectl create -f nome-do-arquivo.yaml
+```
+
+Verifique os namespaces:
+
+```
+kubectl get namespaces
+```
+
+### Criando um LimitRange
+
+Objeto utilizado para limitar a quantidade de determinado recursos que um namespace pode utilizar. Esse limite também pode ser aplicado a todo o cluster.
+
+Criando um arquivo de definição do LimitRange:
+
+```yaml
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: limitando-recursos
+spec:
+  limits:
+  - default:
+      cpu: 1
+      memory: 100Mi
+    defaultRequest:
+      cpu: 0.5
+      memory: 80Mi
+    type: Container
+```
+
+Criando o LimitRange em um namespace:
+
+```
+kubectl create -f arquivo-definição.yaml -n nome-do-namespace
+```
+
+Verificando se o LimitRange foi criado:
+
+```
+kubectl get limitranges -n nome-do-namespace
+```
+
+Vendo detalhes do LimitRange
+
+```
+kubectl describe limitranges -n nome-do-namespace nome-do-limit-range
+```
+
+#### Criando um pod "limitado" por meio de um arquivo YAML
+
+Crie um arquivo e adicione o conteúdo abaixo:
+
+```
+
+```
+
+Crie o pod:
+
+```
+kubectl create -f pod-limitado.yaml -n aula02
+```
+
+Verifique os pods que estão rodando dentro do namespace:
+
+```
+kubectl get pods -n nome-namespace
+```
+
+Vendo com mais detalhes:
+
+```
+kubectl describe pods -n nome-namespace
+```
+
+## Taints
+
+Vemos verificar um dos nós:
+
+```
+kubectl describe nodes nome-do-no
+```
+
+Criando um novo deployment:
+
+```
+kubectl create -f nome-do-deployment.yaml
+```
+
+Verifique os pods:
+
+```
+kubectl get pods -o wide
+```
+
+Impedindo um nó de subir novos pods:
+
+```
+[SINTAXE]
+kubectl taint node nome-do-no nome-da-chave=valor
+```
+
+Exemplo:
+
+```
+kubectl taint node elliot-02 key1=value1:NoSchedule
+```
+
+Verifique se funcionou subindo novos pods e verificando se o Taint está configurado com o describe.
+
+Removendo o Taint:
+
+```
+kubectl taint node elliot-02 key1=NoSchedule-
+```
+
+Criando um Taint para não executar:
+
+```
+kubectl taint node elliot-02 key1=value1:NoExecute
+```
+
+Obs.: O NoExecute pode ser muito útil em uma manutenção.
+
+Removendo o NoExecute:
+
+```
+kubectl taint node elliot-02 key1=NoExecute-
+```
+
+Obs.: Após remover o Taint NoExecute os pods não são balanceados entre os nós workers, para fazer isso será necessário usar o **kubectl scale**, reduzindo e depois aumentando o número de réplicas, exemplo:
+
+```
+kubectl scale --replicas=1 deployment nome-do-deployment
+```
+
+Agora vamos aumentar:
+
+```
+kubectl scale --replicas=6 deployment nome-do-deployment
+```
+
+Verificando o balanceamento:
+
+```
+kubectl get pods -o wide
+```
+
