@@ -139,3 +139,40 @@ Para mais opções consulte o help:
 kubeadm certs renew --help
 ```
 
+Obs.: Pode ser necessário reiniciar os serviços:
+- kube-apiserver;
+- kube-scheduler;
+- etcd
+
+Entre em **/etc/kubernets/manifests** e rode o comando:
+
+```
+systemctl restart kubelet
+```
+
+Se não funcionar pare os containers com o comando:
+
+```
+docker stop id-container
+```
+
+É necessário fazer isso em todos os nós!
+
+## Questão 3
+
+Pois bem, vimos que precisamos atualizar o nosso cluster imediatamente, sem trazer nenhuma indisponibilidade para o ambiente. Como devemos proceder?
+
+Podemos utilizar o comando kubeadm certs para visualizar as datas corretas e também para realizar a sua renovação:
+
+```
+kubeadm certs renew all
+```
+
+Observações:
+- Esse procedimento deve ser realizado em todos os nodes master
+- É necessário restartar o **apiserver**, **controller**, **scheduler** e o **etcd**.
+- Para isso, você pode utilizar o comando docker stop, de dentro do node que está sendo atualizado.
+
+```
+docker stop id-container
+```
