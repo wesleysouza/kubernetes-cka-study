@@ -23,6 +23,8 @@ Tipos de Volumes
 
 ## Volume EmptyDir
 
+Uma das aplicações é salvar logs de forma temporária.
+
 Definindo o arquivo manifesto do pod:
 
 ```yaml
@@ -73,5 +75,99 @@ Veja se ta montando:
 ```
 cd giropops
 ```
+
+### Entrando e analisando o volume
+
+Veja onde o container ta rodando:
+
+```
+kubectl get pods -o wide
+```
+
+Entre no nó onde ele está rodadando com o ssh, é lá que o volume foi criado.
+
+Entre no diretório:
+
+```
+/var/lib/kubelet/pods
+```
+
+Use o comando **find** para encontrar os volumes:
+
+```
+find . -iname "giropops-dir"
+```
+
+Entre no volume.
+
+Remova o pod.
+
+## Persistent Volume (PV)
+
+O PV precisa ser "atachado" no pod, para isso criamos um PersistentVolumeClaim (PVC).
+
+### Configurando o NFS
+
+Criando um NFS:
+
+Instale no master:
+
+```
+apt-get install nfs-kerbnel-server
+```
+
+Nos nós workers:
+
+```
+apt-get install nfs-common
+```
+
+O NFS é uma forma de compartilhar volumes e filesystems.
+
+Criei uma pasta dados:
+
+```
+mkdir /opt/dados
+chmod 777 /opt/dados
+vim /etc/exports
+```
+
+Adicione o conteúdo abaixo no arquivo **/etc/exports**:
+
+```
+/opt/dados * rw,sync,no_root_squash.subtree_check
+```
+
+Digite o comando **exportfs -ar**. Vizualize o compartilhamento com o comando abaixo:
+
+```
+showmount -e ip
+```
+
+### Instalando o PV
+
+Crie o arquivo primeiro-pv.yaml e adicione o conteúdo abaixo:
+
+```yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: primeiro-pv
+spec: 
+  capacity:
+    storage: 1Gi
+  acessModes:
+  - ReadWriteMany
+  persistentVolumeReclaimPolicy: retain
+  nfs:
+    path: /opt/giropops
+    server: 172.31.53.159
+    readOnly: false
+```
+
+```
+
+```
+
 
 
