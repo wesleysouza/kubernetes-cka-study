@@ -113,7 +113,7 @@ Criando um NFS:
 Instale no master:
 
 ```
-apt-get install nfs-kerbnel-server
+apt-get install nfs-kernel-server
 ```
 
 Nos nós workers:
@@ -124,21 +124,29 @@ apt-get install nfs-common
 
 O NFS é uma forma de compartilhar volumes e filesystems.
 
-Criei uma pasta dados:
+Criei uma pasta dados (no nó server):
 
 ```
 mkdir /opt/dados
-chmod 777 /opt/dados
+chmod 1777 /opt/dados/
 vim /etc/exports
 ```
 
 Adicione o conteúdo abaixo no arquivo **/etc/exports**:
 
 ```
-/opt/dados * rw,sync,no_root_squash.subtree_check
+/opt/dados *(rw,sync,no_root_squash,subtree_check)
 ```
 
-Digite o comando **exportfs -ar**. Vizualize o compartilhamento com o comando abaixo:
+Digite o comando (no nó master) **sudo exportfs -a** para permitir a montagem do volume em outras máquinas (publicação do compartilhamento). 
+
+Reinicie o serviço com o comando abaixo:
+
+```
+sudo systemctl restart nfs-kernel-server
+```
+
+Agora podemos vizualizar o compartilhamento por **outros nós** com o comando abaixo:
 
 ```
 showmount -e ip
@@ -153,21 +161,239 @@ apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: primeiro-pv
-spec: 
+spec:
   capacity:
     storage: 1Gi
-  acessModes:
+  accessModes:
   - ReadWriteMany
-  persistentVolumeReclaimPolicy: retain
+  persistentVolumeReclaimPolicy: Retain
   nfs:
-    path: /opt/giropops
-    server: 172.31.53.159
+    path: /opt/dados
+    server: 192.168.0.100
     readOnly: false
 ```
 
+AccessModes volumes:
+- ReadWriteMany: Vários nós podem montar esse volume como leitura e escrita.
+- ReadWriteOnce: Apenas um nó pode montar esse volume como leitura e escrita.
+- ReadOnlyMany: Vários pode montar apenas como leitura.
+
+PersistentVolumeReclaimPolicy: Retain
+
+Esse caso nada acontece com o PV.
+
+Criando o PV:
+
+```
+ kubectl create -f primeiro-pv.yaml
+```
+
+Vendo se o PV foi criado:
+
+```
+kubectl get pv
+```
+
+Vendo a descrição do PV:
+
+```
+kubectl describe pv primeiro-pv
+```
+
+### Criando o PersistentVolumeClain (PVC)
+
+Crie o arquivo primeiro-pvc.yaml e adicione o conteúdo abaixo:
+
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: primeiro-pvc
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 800Mi
+```
+
+Criando o PVC:
+
+```
+kubectl create -f primeiro-pvc.yaml
+```
+
+Vendo se o PVC foi criado:
+
+```
+kubectl get pvc
+```
+
+É possível observar que já o status do PV foi alterado para bound e já é exibido o claim.
+
+### Criando o nosso primeiro Deployment com o nosso PV
+
+Crie o arquivo **nfs-pv.yaml** com o conteúdo abaixo:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    run: nginx
+  name: nginx
+  namespace: default
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      run: nginx
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        run: nginx
+    spec:
+      containers:
+      - image: nginx
+        imagePullPolicy: Always
+        name: nginx
+        volumeMounts:
+        - name: nfs-pv
+          mountPath: /giropops
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      volumes:
+      - name: nfs-pv
+        persistentVolumeClaim:
+          claimName: primeiro-pvc
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+```
+
+Criando o Deployment:
+
+```
+kubectl create -f nfs-pv.yaml
+```
+
+```
+kubectl get deployments
+```
+
+```
+kubectl describe deployment nginx
+```
+
+Entrando no pod:
+
+```
+kubectl exec -ti nome-do-pod -- sh
+bash
+```
+
+Criando um arquivo no /giropops:
+
+```
+touch TESTE GIROPOPS STRIGUS GIRUS
+```
+
+Depois verifique na pasta dados se os arquivos foram criados.
+
+É possível editar o pv:
+
+```
+kubectl edit pv primeiro-pv
+```
+
+## Cronjobs
+
+Crontab de maneira clusterizada. Por meio dele é possível agendar tarefas que vão ser realizadas em algum momento no cluster.
+
+Crie o arquivo **primeiro-cronjob.yaml** com o conteúdo abaixo:
+
+```yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: giropops-cron
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: giropops-cron
+            image: busybox
+            args:
+            - /bin/sh
+            - -c
+            - date; echo Bem Vindo ao Descomplicando Kubernetes - LinuxTips VAIIII ;sleep 30
+          restartPolicy: OnFailure
+```
+
+Formato do cronjob: 
+
+```
+minutos hora mes dia-da-semana comando
+```
+
+Exemplos:
+
+```
+*/1 -> roda a cada um minuto
+10 08 * * 1-5
+0-59 0-23 1-31 1-12 0-7
+
+0 domingo
+1 segunda
+2 terça
+3 quarta
+4 quinta
+5 sexta
+6 sabado
+7 domingo
+```
+
+XXXXXXXXXX
+
+Criando o cronjob:
+
+```
+kubectl create -f primeiro-cronjob.yaml
+```
+
+Vendo os jobs:
+
+```
+kubectl get jobs
+```
+
+Acompanhando com mais detalhes:
+
+```
+kubectl get jobs --watch
 ```
 
 ```
 
+```
 
+```
 
+```
+
+```
+
+```
