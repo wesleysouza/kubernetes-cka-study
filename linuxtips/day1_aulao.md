@@ -138,7 +138,7 @@ Criando o pod através do template:
 kubectl create -f giros_pod.yaml
 ```
 
-Criando um deployment:
+##### Criando um deployment:
 
 ```
 kubectl create deployment giropops --image=nginx --dry-run=client -o yaml > giros_deployment.yaml

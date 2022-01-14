@@ -386,14 +386,158 @@ Acompanhando com mais detalhes:
 kubectl get jobs --watch
 ```
 
-```
+## Secrets
+
+Passar chave e valor sem expor em um arquivo.
+
+Obs.: É interessante gerenciar secrets pelo vault.
+
+Crie o arquivo secret.txt com o comando abaixo:
 
 ```
-
+echo -n "senha boa 123"
 ```
 
-```
+Criando secret:
 
 ```
+kubectl create secret generic my-secret --from-file=secret.txt
+```
+
+Vendo a secret:
 
 ```
+kubectl get secrets
+```
+
+Vendo os detalhes da secret:
+
+```
+kubectl describe secrets my-secret
+```
+
+Vendo a descrição por meio de um arquivo yaml:
+
+```
+kubectl get secrets nome-da-secret -o yaml
+```
+
+No campo **data** é possível observar uma cadeia de caractertes "cifrada". É possível descifras essa cadeia utilizando o comando abaixo:
+
+```
+echo cadeia-de-caracteres | base64 --decode
+```
+
+Criando o primeiro pod que utiliza uma secret:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-secret
+  namespace: default
+spec:
+  containers:
+  - image: busybox
+    name: busy
+    command:
+      - sleep
+      - "3600"
+    volumeMounts:
+    - mountPath: /tmp/giroposp
+      name: my-volume-secret
+  volumes:
+  - name: my-volume-secret
+    secret:
+      secretName: my-secret
+```
+
+O secret é um driver volume.
+
+Crie o pod:
+
+```
+kubectl create -f nome-do-pod.yaml
+```
+
+Entre no pod:
+
+```
+kubectl exec -ti test-secret -- sh
+```
+
+O secret ta montando no /tmp/giropops.
+
+### Crianod secret do nomo literal
+
+```
+kubectl create secret generic my-literal-secret --from-literal user=wesley --from-literal password=senha
+```
+
+Veja a secret:
+
+```
+kubectl get secrets
+```
+
+Observe os valores codificados da secret com o comando:
+
+```
+kubectl get secret my-literal-secret -o yaml
+```
+
+Use o comando abaixo para ver o usuário e a senha:
+
+```
+echo "string" | base64 --decode
+```
+
+### Uma outra maneira
+
+Crie o arquivo **pod-secret-env.yaml** com o conteúdo abaixo:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: teste-secret-env
+  namespace: default
+spec:
+  containers:
+  - image: busybox
+    name: busy-secret-env
+    command:
+      - sleep
+      - "3600"
+    env:
+    - name: MEU_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: my-literal-secret
+          key: user
+    - name: MEU_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: my-literal-secret
+          key: password
+```
+
+Criando a chave:
+
+```
+kubectl create -f pod-secret-env.yaml
+```
+
+Entre dentro do container com o comando abaixo:
+
+```
+kubectl exec -ti test-secret-env -- sh
+```
+
+Digite o comando **set** e veja as variáveis.
+
+```
+kubectl exec teste-secret-env -c busy-secret-env -it -- printenv
+```
+
+ Agora podemos utilizar essa chave dentro do contêiner como variável de ambiente, caso alguma aplicação dentro do contêiner precise se conectar ao um banco de dados por exemplo utilizando usuário e senha, basta criar um secret com essas informações e referenciar dentro de um Pod depois é só consumir dentro do Pod como variável de ambiente ou um arquivo texto criando volumes.
