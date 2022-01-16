@@ -541,3 +541,297 @@ kubectl exec teste-secret-env -c busy-secret-env -it -- printenv
 ```
 
  Agora podemos utilizar essa chave dentro do contêiner como variável de ambiente, caso alguma aplicação dentro do contêiner precise se conectar ao um banco de dados por exemplo utilizando usuário e senha, basta criar um secret com essas informações e referenciar dentro de um Pod depois é só consumir dentro do Pod como variável de ambiente ou um arquivo texto criando volumes.
+
+ ## ConfigMaps
+
+Forma de adicionar configurações dentro de um container.
+
+```
+mdkir frutas
+echo amarela > frutas/banana
+echo vermelho > frutas/morango
+acho verde > frutas/limao
+echo "verde e vermelho" > frutas/melancia
+echo kiwi > predileta
+```
+
+Criando um CongigMap:
+
+```
+kubectl create configmap cores-frutas --from-literal uva=roxa --from-file=predileta --from-file=frutas/
+```
+
+```
+kubectl describe configmap
+```
+
+### Criando pod com ConfigMap
+
+Crie o arquivo pod-configmap.yaml com o conteúdo abaixo:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: busybox-configmap
+  namespace: default
+spec:
+  containers:
+  - image: busybox
+    name: busy-configmap
+    command: 
+      - sleep
+      - "3600"
+    env:
+    - name: frutas
+      valueFrom:
+        configMapKeyRef:
+          name: cores-frutas
+          key: predileta
+```
+
+Crie o ConfigMap:
+
+```
+kubectl create -f pod-configmap.yaml
+```
+
+Entre no container:
+
+```
+kubectl exec -ti busy-configmap -- sh
+```
+
+```
+kubectl delete -f pod-configmap.yaml
+```
+
+Edite o arquivo e deixe da forma que ta abaixo:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: busybox-configmap
+  namespace: default
+spec:
+  containers:
+  - image: busybox
+    name: busy-configmap
+    command: 
+      - sleep
+      - "3600"
+    envFrom:
+    - configMapRef:
+        name: cores-frutas
+```
+
+Entre no container com o comando:
+
+```
+kubectl exec -ti busy-configmap -- sh
+```
+
+Use o comando **set** para ver as variáveis.
+
+
+### Criando outro configmap
+
+Crie o arquivo **pod-configmap-file.yaml** com o conteúdo abaixo:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: busybox-configmap-file
+  namespace: default
+spec:
+  containers:
+  - image: busybox
+    name: busy-configmap
+    command: 
+      - sleep
+      - "3600"
+    volumeMounts:
+    - name: meu-configmap-vol
+      mountPath: /etc/frutas
+  volumes:
+  - name: meu-configmap-vol
+    configMap:
+     name: cores-frutas
+```
+
+Crie o novo configmap.
+
+```
+kubectl create -f pod-configmap-file.yaml
+```
+
+```
+kubectl exec -ti busybox-configmap-file -- sh
+```
+
+Verifique a pasta **/etc/frutas** e veja se se os arquivos e o conteúdo estão lá (eles são links simbólicos).
+
+## InitContainer
+
+Preparar o ambiente para rodar alguma aplicação. Esse container executa alguma ação específica antes do container principal ser executado, preparando o terreno.
+
+Crie o arquivo nginx-initcontainer.yaml com o conteúdo abaixo:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: init-demo
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - name: workdir
+      mountPath: /usr/share/nginx/html
+  initContainers:
+  - name: install
+    image: busybox
+    command: ['wget','-O','/work-dir/index.html','http://linuxtips.io']
+    volumeMounts:
+    - name: workdir
+      mountPath: "/work-dir"
+  dnsPolicy: Default
+  volumes:
+  - name: workdir
+    emptyDir: {}
+```
+
+Crie o initContainer:
+
+```
+kubectl create -f nginx-initcontainer.yaml
+```
+
+```
+kubectl get pods
+```
+
+Entre no pod
+
+```
+kubectl exec -ti init-demo -- sh
+cd /usr/share
+ls
+cat index.html
+```
+
+## RBAC
+
+Criando **serviceaccount** no cluster e atribuíndo permissões a ele.
+
+Criando serviceaccont
+
+```
+kubectl create serviceaccount wesley
+```
+
+Vendo os servicesaccounts:
+
+```
+kubectl get serviceaccounts
+```
+
+Vendo as roles:
+
+```
+kubeclt cluster role
+```
+
+É possível ver as associações de um usuário com determinada role (clusterrolebindings) com o comando abaixo:
+
+```
+kubectl get clusterrolebindings.rbac.autorization.ks8.io
+```
+
+Vendo as associações da rola **cluster-admin**:
+
+```
+kubectl get clusterrolebindings.rbac.autorization.ks8.io cluster-admin
+```
+
+Criando um clusterrolebiding:
+
+```
+kubectl create clusterrolebinding toskera --serviceaccount=default:wesley --clusterrole=cluster-admin
+```
+
+Vendo a clusterrole toskera com mais detalhes:
+
+```
+kubectl describe clusterrolebindings.rbac.autorization.ks8.io toskera
+```
+
+Vendo com detalhes a conta wesley:
+
+```
+kubectl describe serviceacounts wesley
+```
+
+## Trabalhando com arquivos yaml
+
+Crie o arquivo admin-user.yaml com o conteúdo abaixo:
+
+```yaml
+apiVesion: v1
+kind: ServiceAccount
+metadate:
+  name: admin-user
+  namespace: kube-system
+```
+
+Crie o service account:
+
+```
+kubectl create -f admin-user.yaml
+```
+
+Veja se o service account foi criado:
+
+```
+kubectl get serviceaccounts -n kube-system
+```
+
+Agora vamos criar o **cluserrolebinding**. Crie o arquivo **admin-cluster-role-binding.yaml** e adicione o conteúdo abaixo: 
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: admin-user
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: admin-user
+  namespace: kube-system
+```
+
+Crie o objeto:
+
+```
+kubectl create -f admin-cluster-role-binding.yaml
+```
+
+Pegue com o get:
+
+```
+kubectl get clusterrolebindings.rbac.autorization.ks8.io
+```
+
+## Helm
+
+O Helm é o gerenciador de pacotes do Kubernetes. Os pacotes gerenciados pelo Helm, são chamados de charts, que basicamente são formados por um conjunto de manifestos Kubernetes no formato YAML e alguns templates que ajudam a manter variáveis dinâmicas de acordo com o ambiente. O Helm ajuda você a definir, instalar e atualizar até o aplicativo Kubernetes mais complexo.
+
+Obs.: As anotações do Helm vão ficar no arquivo **day4_aulao**.
