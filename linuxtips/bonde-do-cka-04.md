@@ -69,54 +69,34 @@ ETCDCTL_API=3 etcdctl snapshot save o-backup-do-gerente.db --key /etc/kubernetes
 
 **Obs.: Talvez seja necessário transferir esse arquivo para um local seguro.**
 
+## Questão 2
 
-1:10:23
+Muito bem, o gerente está feliz, mas não perfeitamente explendido em sua felicidade! A pergunta do gerente foi a seguinte, vc já fez o restore para testar o nosso snapshot? EU QUERO TESTAR AGORA!
 
-```
-
-```
-
-```
+Crie um pod:
 
 ```
-
-
+kubectl run strigus --image nginx
 ```
 
-```
+Verifique a pasta **/etc/kubernetes/manifests**.
 
+Obs.: No restore não é necessário colocar os certificados.
 
-
-```
-
-```
-
+Comando para restaurar:
 
 ```
-
+ETCDCTL_API=3 etcdctl snapshot restore snap_do_gerente.db --data-dir /var/lib/etcd/menber
 ```
 
+### Teste
+
+Entre no diretório **/etc/kubernetes/manifests/** e veja o arquivo **etcd.yaml**. No arquivo verifique o campo **--data-dir**, nele ta o caminho para os arquivos do etcd. Alterando esse caminho podemos apontar para outra base etcd em nossa máquina, algum backup já realizado.
+
+Deu pau. O correto era mudar o path no campo **hostpath**.
+
+### Resposta
 
 ```
-
-```
-
-
-```
-
-```
-
-
-```
-
-```
-
-
-```
-
-```
-
-
-```
-
+ETCDCTL_API=3 etcdctl snapshot restore snap_do_gerente.db --data-dir /tmp/etcd-test
 ```
