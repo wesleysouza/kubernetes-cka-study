@@ -1,4 +1,4 @@
-# Core Concepts Notes
+# 2 Core Concepts
 
 ## 2.20 PODs with YAML
 
