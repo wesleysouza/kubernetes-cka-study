@@ -121,6 +121,94 @@ Para deletar o ReplicaSet:
 kubectl delete replicaset myapp-replicaset
 ```
 
+## 2.30 Deployments
+
+O Deployment possibilita atulizar as instâncias subjacentes perfeitamente usando roling updates.
+
+Um dos tipos de upgrade é conhecido como rolling updates.
+
+Para ver todos os objetos criados:
+
+```
+kubectl get all
+```
+
+## 2.34 Namespaces
+
+Para saber o número de namespaces digite o comando abaixo:
+
+```
+kubectl get namespaces
+```
+
+É possível atribuir cotas aos namespaces.
+
+### DNS
+
+db-service.dev.svc.cluster.local
+(Service name).(Namespace).(Service).(Domain)
+
+Em arquivos de definição podemos definir o namespace onde o objeto vai subir definindo na seção metadata o campo namespace: **nome-do-namespace**.
+
+### Trocando de contexto
+
+Para trabalhar em um namespace específico use o kubeconfig da maneira apresnetada abaixo:
+
+```
+kubectl config set-context $(kubectl config current-context) --namespace=dev
+```
+
+Após digitar o comando acima, estaremos no namespace dev.
+
+### Resource Quota
+
+É possível por meio de arquivos de manifesto definir Quotas para os namespaces, veja abaixo um exemplo de arquivo para definição de Quota:
+
+```yaml
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: compute-quota
+  namespace: dev
+spec:
+  hard:
+    pods: "10"
+    requests.cpu: "4"
+    requests.memory: 5Gi
+    limits.cpu: "10"
+    limits.memory: 10Gi
+```
+
+Para criar essa Quota basta usar o comando abaixo:
+
+```
+kubectl create -f compute-qouta.yaml
+```
+
+## 2.36 Solution namespaces
+
+```
+kubectl get ns --no-headers | wc -l
+kubectl -n research get pods --no-headers
+kubectl get pods --all-namespaces | grep blue
+```
+
+## 2.37 Services
+
+```
+
+```
+
+
+```
+
+```
+
+
+```
+
+```
+
 ```
 
 ```

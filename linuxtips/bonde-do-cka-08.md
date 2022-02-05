@@ -103,6 +103,8 @@ Ainda não subiu!
 
 Resolução: basta instalar o wget no pod!
 
+Caso o serviço seja deletado o pod continua rodando.
+
 ```
 
 ```
