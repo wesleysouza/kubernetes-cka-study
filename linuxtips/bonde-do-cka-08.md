@@ -111,15 +111,5 @@ Caso o serviço seja deletado o pod continua rodando.
 
 ```
 
-```
 
-```
-
-```
-
-```
-
-```
-
-```
 
