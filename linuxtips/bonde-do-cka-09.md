@@ -88,6 +88,78 @@ Vale lembrar que os contextos estão definidos no seu arquivo config, na maioria
 ## Questão 02
 
 Precisamos criar um pod com o Nginx rodando no cluster lt-01, já no cluster giroposp-01, nós precisamos ter um deployment e um service deployment do nginx e um service apontando para esse deployment.
-Os ods deverão ter o mesmo nome em todos os clusters.
+Os containers deverão ter o mesmo nome em todos os clusters e estarem rodando no namespace strigus.
 
-56:38
+Veja os contextos:
+
+```
+kubectl config get-contexts
+```
+
+Criando um pod:
+
+```
+kubectl run --image=nginx --port=80 pod-test-1 --namespace=strigus --dry-run=client -o yaml
+> pod-test.yaml
+```
+
+Criando o namespace strigus:
+
+```
+kubectl create ns strigus
+```
+
+Crie o pod:
+
+```
+kubectl create -f pod-test.yaml
+```
+
+Ver o contexto atual:
+
+```
+kubectl config current-context
+```
+
+Verifique os contextos disponíveis:
+
+```
+kubectl config get-contexts
+```
+
+Possível saída:
+
+```bash
+#Exemplo de saída
+CURRENT   NAME               CLUSTER            AUTHINFO           NAMESPACE
+*         kind-homologacao   kind-homologacao   kind-homologacao
+          kind-producao      kind-producao      kind-producao
+```
+
+Mude o contexto com o comando abaixo:
+
+```
+kubectl config use-context nome-do-contexto
+```
+
+Criando deployment em outro contexto: 
+
+```
+kubectl create deployment deployment-test-1 --image=nginx --port=80 --dry-run=client -o yaml > deployment-test-1.yaml
+```
+
+Crie o deployment:
+
+```
+kubectl create -f pod-test.yaml
+```
+
+Verifique se os pods estão up:
+
+```
+kubectl get pods
+```
+
+```
+kubectl expose deployment nome-do-deployment
+```
